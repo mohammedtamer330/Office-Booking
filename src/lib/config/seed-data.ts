@@ -24,6 +24,7 @@ export const FUNCTIONS = [
   { key: "TM", label: "TM", color: null },
   { key: "B2C", label: "B2C", color: "#037EF3" },
   { key: "Finance", label: "Finance", color: null },
+  { key: "LCP", label: "LCP", color: "#7C3AED" }, // separated out — the LCP is not part of F&L
 ] as const;
 
 export type FunctionKey = (typeof FUNCTIONS)[number]["key"];
@@ -31,7 +32,7 @@ export type FunctionKey = (typeof FUNCTIONS)[number]["key"];
 // Which functions each role may see/use. UI reads this to filter the
 // function picker; the server independently re-checks it on every booking.
 export const ROLE_FUNCTION_MATRIX: Record<RoleKey, FunctionKey[]> = {
-  EB_TEAM: ["FandL", "TM", "oGV", "oGTa", "B2C"],
+  EB_TEAM: ["LCP", "FandL", "TM", "oGV", "oGTa", "B2C"],
   LCD: ["iGV", "iGTe"],
   MM: ["oGV", "oGTa", "B2C", "TM", "Finance", "iGV"],
 };
@@ -67,7 +68,7 @@ export const PEOPLE: {
   position?: string;
 }[] = [
   // EB Team
-  { name: "Mayar Halfaya", role: "EB_TEAM", function: "FandL", position: "LCP" },
+  { name: "Mayar Halfaya", role: "EB_TEAM", function: "LCP", position: "LCP" },
   { name: "Tito", role: "EB_TEAM", function: "FandL", position: "LCVP F&L" },
   { name: "Farah", role: "EB_TEAM", function: "TM", position: "LCVP TM" },
   { name: "Body Kamal", role: "EB_TEAM", function: "oGV", position: "LCVP oGV" },

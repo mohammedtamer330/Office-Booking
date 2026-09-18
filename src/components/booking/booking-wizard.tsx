@@ -131,7 +131,7 @@ export function BookingWizard({ data }: { data: BookingReferenceBundle }) {
     <div>
       <ProgressBar current={step} />
 
-      <Card className="mt-6 p-6">
+      <Card className="mt-6 p-6" style={{ boxShadow: "var(--shadow-card)" }}>
         {step === 0 && (
           <StepShell title="Choose your role">
             <div className="grid gap-2">
@@ -359,20 +359,38 @@ export function BookingWizard({ data }: { data: BookingReferenceBundle }) {
 
 function ProgressBar({ current }: { current: number }) {
   return (
-    <div>
-      <div className="flex justify-between text-xs text-muted">
-        {STEPS.map((label, i) => (
-          <span key={label} className={cn(i === current && "font-semibold text-ink")}>
-            {label}
-          </span>
-        ))}
-      </div>
-      <div className="mt-2 h-1 w-full rounded-full bg-black/5">
-        <div
-          className="h-1 rounded-full bg-ink transition-all"
-          style={{ width: `${((current + 1) / STEPS.length) * 100}%` }}
-        />
-      </div>
+    <div className="flex items-center">
+      {STEPS.map((label, i) => {
+        const done = i < current;
+        const active = i === current;
+        return (
+          <div key={label} className="flex flex-1 items-center last:flex-none">
+            <div className="flex flex-col items-center">
+              <span
+                className={cn(
+                  "flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold tabular transition-colors",
+                  done && "bg-brand text-white",
+                  active && "bg-ink text-white",
+                  !done && !active && "bg-black/[0.06] text-muted",
+                )}
+              >
+                {done ? "✓" : i + 1}
+              </span>
+              <span
+                className={cn(
+                  "mt-1.5 hidden text-[11px] sm:block",
+                  active ? "font-semibold text-ink" : "text-muted",
+                )}
+              >
+                {label}
+              </span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div className={cn("mx-1.5 h-px flex-1 sm:mb-4", done ? "bg-brand" : "bg-line-strong")} />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -1,11 +1,15 @@
 export const dynamic = "force-dynamic";
 
 import { getBookingReferenceData } from "@/lib/reference-data";
+import { getRoomTimelines } from "@/lib/room-timeline";
+import { todayInAppTz } from "@/lib/time";
 import { BookingWizard } from "@/components/booking/booking-wizard";
+import { RoomAvailabilityBoard } from "@/components/booking/room-availability-board";
 import type { BookingReferenceBundle } from "@/lib/types";
+import Link from "next/link";
 
 export default async function BookingHomePage() {
-  const data = await getBookingReferenceData();
+  const [data, timelines] = await Promise.all([getBookingReferenceData(), getRoomTimelines(todayInAppTz())]);
 
   if (!data.settings) {
     return (
@@ -15,7 +19,6 @@ export default async function BookingHomePage() {
     );
   }
 
-  // Never send the EB Room password hash to the client.
   const bundle: BookingReferenceBundle = {
     people: data.people,
     roles: data.roles as BookingReferenceBundle["roles"],
@@ -36,15 +39,39 @@ export default async function BookingHomePage() {
     },
   };
 
+  const occupiedCount = timelines.filter((t) => t.liveStatus === "Occupied").length;
+
   return (
-    <div className="mx-auto max-w-xl px-5 py-10">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-ink">Book a room</h1>
-        <p className="mt-1 text-sm text-muted">
-          Select your role, function, and name — then pick a room and time.
+    <div className="mx-auto max-w-5xl px-5 py-10 lg:py-14">
+      <div className="mb-10 max-w-xl">
+        <p className="text-sm font-medium text-brand">AIESEC in Suez</p>
+        <h1 className="mt-1.5 text-[28px] font-semibold leading-tight text-ink sm:text-3xl">
+          Book a room in a few taps.
+        </h1>
+        <p className="mt-2 text-[15px] text-muted">
+          {occupiedCount === 0
+            ? "All three rooms are free right now — pick one below."
+            : `${occupiedCount} of ${timelines.length} rooms are in use right now — check the board before you book.`}
         </p>
       </div>
-      <BookingWizard data={bundle} />
+
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,340px)_1fr] lg:gap-12">
+        <div>
+          <div className="flex items-baseline justify-between lg:sticky lg:top-20">
+            <h2 className="text-sm font-semibold text-ink">Room status</h2>
+            <Link href="/availability" className="text-xs text-muted hover:text-ink">
+              Full timeline →
+            </Link>
+          </div>
+          <div className="mt-3 lg:sticky lg:top-28">
+            <RoomAvailabilityBoard entries={timelines} date={todayInAppTz()} compact />
+          </div>
+        </div>
+
+        <div>
+          <BookingWizard data={bundle} />
+        </div>
+      </div>
     </div>
   );
 }

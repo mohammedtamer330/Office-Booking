@@ -50,6 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
           <div className="border-t border-white/10 p-3">
             <SignOutButton />
+            <p className="mt-2 px-3 text-[11px] text-white/40">Developed by Mohammed Tamer</p>
           </div>
         </aside>
 
