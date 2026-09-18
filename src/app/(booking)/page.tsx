@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { getBookingReferenceData } from "@/lib/reference-data";
 import { getRoomTimelines } from "@/lib/room-timeline";
-import { todayInAppTz } from "@/lib/time";
+import { todayInAppTz, nowMinutesInAppTz } from "@/lib/time";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import { RoomAvailabilityBoard } from "@/components/booking/room-availability-board";
 import type { BookingReferenceBundle } from "@/lib/types";
@@ -64,12 +64,12 @@ export default async function BookingHomePage() {
             </Link>
           </div>
           <div className="mt-3 lg:sticky lg:top-28">
-            <RoomAvailabilityBoard entries={timelines} date={todayInAppTz()} compact />
+            <RoomAvailabilityBoard entries={timelines} compact />
           </div>
         </div>
 
         <div>
-          <BookingWizard data={bundle} />
+          <BookingWizard data={bundle} today={todayInAppTz()} nowMinutes={nowMinutesInAppTz()} />
         </div>
       </div>
     </div>

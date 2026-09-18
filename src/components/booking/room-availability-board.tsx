@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { DoorOpen, Lock } from "lucide-react";
 import { buildFunctionBrand } from "@/lib/config/function-branding";
 import type { RoomTimelineEntry } from "@/lib/room-timeline";
@@ -15,11 +14,9 @@ function minutesFromDayStart(time: string): number {
 
 export function RoomAvailabilityBoard({
   entries,
-  date,
   compact = false,
 }: {
   entries: RoomTimelineEntry[];
-  date: string;
   compact?: boolean;
 }) {
   const now = new Date();
@@ -165,26 +162,6 @@ export function RoomAvailabilityBoard({
           );
         })}
       </div>
-
-      {!compact && (
-        <div className="mt-4 flex items-center justify-center gap-4 text-sm">
-          <Link href={`/availability?date=${shiftDate(date, -1)}`} className="text-muted hover:text-ink">
-            ← Previous day
-          </Link>
-          <Link href="/availability" className="font-medium text-brand hover:underline">
-            Today
-          </Link>
-          <Link href={`/availability?date=${shiftDate(date, 1)}`} className="text-muted hover:text-ink">
-            Next day →
-          </Link>
-        </div>
-      )}
     </div>
   );
-}
-
-function shiftDate(dateStr: string, days: number): string {
-  const d = new Date(dateStr + "T00:00:00Z");
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
 }

@@ -61,6 +61,12 @@ export function CheckInOutActions({
 
   return (
     <div>
+      {hasCheckedIn && !hasCheckedOut && (
+        <div className="mb-3 rounded-lg bg-warning/10 p-3 text-sm text-warning">
+          You&apos;re checked in. Come back to this page (or scan the QR again) and tap{" "}
+          <strong>Check out</strong> before you leave the room.
+        </div>
+      )}
       {message && (
         <p className={`mb-3 text-sm ${message.type === "success" ? "text-success" : "text-danger"}`}>
           {message.text}

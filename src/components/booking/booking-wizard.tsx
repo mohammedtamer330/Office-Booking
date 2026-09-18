@@ -11,11 +11,20 @@ import { cn } from "@/lib/utils";
 import { buildFunctionBrand } from "@/lib/config/function-branding";
 import { createBookingAction } from "@/app/actions/booking-actions";
 import { getAvailabilityAction } from "@/app/actions/availability-actions";
+import { TimeSlotPicker } from "@/components/booking/time-slot-picker";
 import type { BookingReferenceBundle, BookedSlot } from "@/lib/types";
 
 const STEPS = ["Role", "Function", "Name", "Room", "Day", "Time", "Confirm"] as const;
 
-export function BookingWizard({ data }: { data: BookingReferenceBundle }) {
+export function BookingWizard({
+  data,
+  today,
+  nowMinutes,
+}: {
+  data: BookingReferenceBundle;
+  today: string;
+  nowMinutes: number;
+}) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [roleId, setRoleId] = useState<string | null>(null);
@@ -64,6 +73,9 @@ export function BookingWizard({ data }: { data: BookingReferenceBundle }) {
   }, [roleId, data]);
 
   const brand = buildFunctionBrand(selectedFunction?.color ?? null);
+  const isToday = date === today;
+  const nowFloorMinutes = nowMinutes;
+  const minSelectableDate = data.settings.bookingStartDate < today ? today : data.settings.bookingStartDate;
 
   const durationMinutes = useMemo(() => {
     if (!startTime || !endTime) return 0;
@@ -241,10 +253,12 @@ export function BookingWizard({ data }: { data: BookingReferenceBundle }) {
             <Input
               type="date"
               value={date}
-              min={data.settings.bookingStartDate}
+              min={minSelectableDate}
               max={data.settings.bookingEndDate}
               onChange={(e) => {
                 setDate(e.target.value);
+                setStartTime("");
+                setEndTime("");
                 if (roomId) void loadAvailability(roomId, e.target.value);
               }}
             />
@@ -256,58 +270,26 @@ export function BookingWizard({ data }: { data: BookingReferenceBundle }) {
 
         {step === 5 && (
           <StepShell title="Choose a time">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="start-time">Start</Label>
-                <Input
-                  id="start-time"
-                  type="time"
-                  className="mt-1.5"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="end-time">End</Label>
-                <Input
-                  id="end-time"
-                  type="time"
-                  className="mt-1.5"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {durationMinutes > 0 && (
-              <p className="mt-2 text-sm text-muted">
-                Duration: {Math.floor(durationMinutes / 60)}h {durationMinutes % 60}m
-                {(durationMinutes < data.settings.minBookingMinutes ||
-                  durationMinutes > data.settings.maxBookingMinutes) && (
-                  <span className="text-danger">
-                    {" "}
-                    — must be between {data.settings.minBookingMinutes} and {data.settings.maxBookingMinutes} minutes.
-                  </span>
-                )}
-              </p>
+            {loadingSlots ? (
+              <p className="text-sm text-muted">Loading availability…</p>
+            ) : (
+              <TimeSlotPicker
+                bookedSlots={bookedSlots}
+                startTime={startTime}
+                endTime={endTime}
+                onChangeStart={setStartTime}
+                onChangeEnd={setEndTime}
+                minDurationMinutes={data.settings.minBookingMinutes}
+                maxDurationMinutes={data.settings.maxBookingMinutes}
+                nowFloorMinutes={isToday ? nowFloorMinutes : undefined}
+              />
             )}
 
-            <div className="mt-4">
-              <p className="mb-2 text-xs font-medium text-muted">Already booked today</p>
-              {loadingSlots ? (
-                <p className="text-sm text-muted">Loading availability…</p>
-              ) : bookedSlots.length === 0 ? (
-                <p className="text-sm text-success">This room is fully open today.</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {bookedSlots.map((slot, i) => (
-                    <Badge key={i} variant="danger">
-                      {slot.startTime.slice(0, 5)}–{slot.endTime.slice(0, 5)}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
+            {durationMinutes > 0 && (
+              <p className="mt-4 text-sm text-muted">
+                Duration: {Math.floor(durationMinutes / 60)}h {durationMinutes % 60}m
+              </p>
+            )}
           </StepShell>
         )}
 
@@ -397,7 +379,7 @@ function ProgressBar({ current }: { current: number }) {
 
 function StepShell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div className="animate-rise">
       <h2 className="mb-4 text-base font-semibold text-ink">{title}</h2>
       {children}
     </div>
@@ -421,14 +403,17 @@ function SelectRow({
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center justify-between rounded-lg border p-3.5 text-left transition-colors",
-        selected ? "border-ink bg-black/[0.03]" : "border-line-strong hover:bg-black/[0.02]",
+        "flex items-center justify-between rounded-lg border p-3.5 text-left transition-all",
+        selected ? "border-ink bg-black/[0.03] scale-[1.01]" : "border-line-strong hover:bg-black/[0.02]",
       )}
       style={selected && accentColor ? { borderColor: accentColor } : undefined}
     >
-      <span>
-        <span className="font-medium text-ink">{label}</span>
-        {sublabel && <span className="ml-2 text-sm text-muted">{sublabel}</span>}
+      <span className="flex items-center gap-2.5">
+        {accentColor && <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: accentColor }} />}
+        <span>
+          <span className="font-medium text-ink">{label}</span>
+          {sublabel && <span className="ml-2 text-sm text-muted">{sublabel}</span>}
+        </span>
       </span>
       {selected && accentColor && (
         <span className="size-2.5 rounded-full" style={{ backgroundColor: accentColor }} />

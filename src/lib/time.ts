@@ -26,6 +26,11 @@ export function todayInAppTz(): string {
   return formatInAppTz(new Date(), "yyyy-MM-dd");
 }
 
+export function nowMinutesInAppTz(): number {
+  const parts = formatInAppTz(new Date(), "HH:mm").split(":").map(Number);
+  return parts[0] * 60 + parts[1];
+}
+
 export function minutesBetween(a: Date, b: Date): number {
   return Math.round((b.getTime() - a.getTime()) / 60000);
 }

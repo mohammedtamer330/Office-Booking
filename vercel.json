@@ -1,8 +1,8 @@
-   {
-     "crons": [
-       {
-         "path": "/api/cron/no-show",
-         "schedule": "0 3 * * *"
-       }
-     ]
-   }
+{
+  "crons": [
+    {
+      "path": "/api/cron/no-show",
+      "schedule": "*/10 * * * *"
+    }
+  ]
+}

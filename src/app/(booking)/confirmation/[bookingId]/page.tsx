@@ -45,6 +45,9 @@ export default async function ConfirmationPage({
         <p className="mt-3 text-center text-xs text-muted">
           Scan at the room to check in, or use the button below.
         </p>
+        <p className="mt-1 text-center text-xs text-warning">
+          Don&apos;t forget to check out the same way when you leave.
+        </p>
 
         <dl className="mt-6 grid grid-cols-2 gap-y-3 text-sm">
           <dt className="text-muted">Name</dt>
