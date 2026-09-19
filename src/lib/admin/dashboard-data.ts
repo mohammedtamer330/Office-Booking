@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { bookings, rooms } from "@/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
+import { getAttendeeCounts } from "@/lib/booking/attendance";
 import { todayInAppTz, nowInAppTz, combineDateAndTimeInAppTz } from "@/lib/time";
 
 export async function getDashboardData() {
@@ -12,7 +13,11 @@ export async function getDashboardData() {
     orderBy: [asc(bookings.startTime)],
   });
 
+  const attendeeCounts = await getAttendeeCounts(todaysBookings.map((b) => b.id));
+  const peopleCheckedIn = Array.from(attendeeCounts.values()).reduce((a, b) => a + b, 0);
+
   const counts = {
+    peopleCheckedIn,
     today: todaysBookings.length,
     checkedIn: todaysBookings.filter((b) => b.status === "CHECKED_IN").length,
     upcoming: todaysBookings.filter((b) => b.status === "UPCOMING").length,
@@ -43,5 +48,5 @@ export async function getDashboardData() {
     return { room, status, current, next };
   });
 
-  return { todaysBookings, counts, liveRooms };
+  return { todaysBookings, counts, liveRooms, attendeeCounts };
 }

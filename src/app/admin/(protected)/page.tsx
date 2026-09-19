@@ -14,11 +14,12 @@ const STATUS_VARIANT: Record<string, "neutral" | "success" | "warning" | "danger
 };
 
 export default async function AdminDashboardPage() {
-  const { todaysBookings, counts, liveRooms } = await getDashboardData();
+  const { todaysBookings, counts, liveRooms, attendeeCounts } = await getDashboardData();
 
   const cards = [
     { label: "Today's bookings", value: counts.today },
     { label: "Currently checked in", value: counts.checkedIn },
+    { label: "People checked in", value: counts.peopleCheckedIn },
     { label: "Upcoming", value: counts.upcoming },
     { label: "Completed today", value: counts.completedToday },
     { label: "No shows", value: counts.noShows },
@@ -30,7 +31,7 @@ export default async function AdminDashboardPage() {
       <h1 className="text-2xl font-semibold text-ink">Dashboard</h1>
       <p className="mt-1 text-sm text-muted">Live overview of today&apos;s activity.</p>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
         {cards.map((c) => (
           <Card key={c.label} className="p-4">
             <p className="text-2xl font-semibold text-ink tabular">{c.value}</p>
@@ -85,6 +86,7 @@ export default async function AdminDashboardPage() {
                     <th className="py-2 pr-3 font-medium">Person</th>
                     <th className="py-2 pr-3 font-medium">Function</th>
                     <th className="py-2 pr-3 font-medium">Status</th>
+                    <th className="py-2 pr-3 font-medium">Checked in</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -105,6 +107,7 @@ export default async function AdminDashboardPage() {
                         <td className="py-2.5 pr-3">
                           <Badge variant={STATUS_VARIANT[b.status]}>{b.status.replace("_", " ")}</Badge>
                         </td>
+                        <td className="py-2.5 pr-3 tabular text-muted">{attendeeCounts.get(b.id) ?? 0}</td>
                       </tr>
                     );
                   })}

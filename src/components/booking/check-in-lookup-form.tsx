@@ -36,7 +36,7 @@ export function CheckInLookupForm() {
           placeholder="BK-2026-0001"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          autoFocus
+         
         />
       </div>
       {error && <p className="text-sm text-danger">{error}</p>}

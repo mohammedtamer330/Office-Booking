@@ -5,11 +5,13 @@ import { people } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
+import { isAdmin, ADMIN_REQUIRED_MESSAGE } from "@/lib/auth/require-admin";
 import { personUpsertSchema } from "@/lib/validation/schemas";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
 export async function upsertPersonAction(raw: unknown): Promise<ActionResult> {
+  if (!(await isAdmin())) return { success: false, error: ADMIN_REQUIRED_MESSAGE };
   const parsed = personUpsertSchema.safeParse(raw);
   if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
   const { id, ...values } = parsed.data;
@@ -44,6 +46,7 @@ export async function upsertPersonAction(raw: unknown): Promise<ActionResult> {
 }
 
 export async function togglePersonActiveAction(id: string, active: boolean): Promise<ActionResult> {
+  if (!(await isAdmin())) return { success: false, error: ADMIN_REQUIRED_MESSAGE };
   await db.update(people).set({ active, updatedAt: new Date() }).where(eq(people.id, id));
   await createAuditLog({
     actorId: "admin",

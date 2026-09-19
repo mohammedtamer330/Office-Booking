@@ -95,3 +95,71 @@ body {
 .animate-pulse-ring {
   animation: pulse-ring 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* ------------------------------------------------------------------------
+   Interaction layer (added with the office dashboard + team check-in).
+   Motion here answers a person's action — opening, selecting, confirming —
+   or marks something live. Nothing loops except the live dot above.
+   ------------------------------------------------------------------------ */
+
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Dialogs. The old `data-[state=open]:animate-in` classes rely on a Tailwind
+   plugin that isn't installed, so they never animated; these are plain CSS. */
+@keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes overlay-out { to { opacity: 0; } }
+@keyframes pop-in { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+@keyframes pop-out { to { opacity: 0; transform: scale(0.97); } }
+@keyframes sheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes sheet-out { to { transform: translateY(100%); } }
+
+.dialog-overlay[data-state="open"] { animation: overlay-in 0.18s ease-out both; }
+.dialog-overlay[data-state="closed"] { animation: overlay-out 0.14s ease-in both; }
+.dialog-pop[data-state="open"] { animation: pop-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.dialog-pop[data-state="closed"] { animation: pop-out 0.12s ease-in both; }
+/* Mobile: bottom sheet. From the sm breakpoint up: same pop as a normal dialog. */
+.dialog-sheet[data-state="open"] { animation: sheet-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.dialog-sheet[data-state="closed"] { animation: sheet-out 0.18s ease-in both; }
+@media (min-width: 640px) {
+  .dialog-sheet[data-state="open"] { animation: pop-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .dialog-sheet[data-state="closed"] { animation: pop-out 0.12s ease-in both; }
+}
+
+/* Loading skeletons */
+@keyframes shimmer { 0% { background-position: -240px 0; } 100% { background-position: calc(240px + 100%) 0; } }
+.skeleton {
+  border-radius: 8px;
+  background-color: rgba(20, 21, 26, 0.06);
+  background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  background-size: 240px 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.3s ease-in-out infinite;
+}
+
+/* A day being selected in the calendar */
+@keyframes day-pop { from { transform: scale(0.88); } to { transform: scale(1); } }
+.animate-day-pop { animation: day-pop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+/* Timeline swapping to another day */
+@keyframes fade-swap { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-swap { animation: fade-swap 0.22s ease-out both; }
+
+/* Check-in success: the ring draws, then the tick. */
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes success-pop { 0% { transform: scale(0.85); opacity: 0; } 60% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(1); } }
+.success-badge { animation: success-pop 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.success-ring { stroke-dasharray: 151; stroke-dashoffset: 151; animation: draw 0.5s ease-out 0.05s forwards; }
+.success-tick { stroke-dasharray: 36; stroke-dashoffset: 36; animation: draw 0.28s ease-out 0.4s forwards; }
+
+/* Screen-reader-only text */
+.sr-only-text {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}

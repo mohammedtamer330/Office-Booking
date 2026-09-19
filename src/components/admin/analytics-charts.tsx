@@ -16,6 +16,7 @@ import { buildFunctionBrand } from "@/lib/config/function-branding";
 
 type AnalyticsData = {
   byDay: { date: string; count: number }[];
+  attendanceByDay: { date: string; count: number }[];
   byRoom: { name: string; count: number }[];
   byHour: { hour: number; count: number }[];
   byRole: { label: string; count: number }[];
@@ -39,6 +40,27 @@ export function AnalyticsCharts({ data }: { data: AnalyticsData }) {
               <Line type="monotone" dataKey="count" stroke="#14151a" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>People checked in per day</CardTitle>
+        </CardHeader>
+        <CardContent style={{ height: 260 }}>
+          {data.attendanceByDay.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted">No check-ins in this period yet.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.attendanceByDay}>
+                <CartesianGrid stroke="#e7e5e1" vertical={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="count" fill="#1f3a93" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </CardContent>
       </Card>
 

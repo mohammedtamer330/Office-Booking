@@ -3,82 +3,63 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { checkInAction, checkOutAction } from "@/app/actions/booking-actions";
+import { checkOutAction } from "@/app/actions/booking-actions";
 
-export function CheckInOutActions({
+/**
+ * Check-out stays a booking-level action for the booking owner (it ends the
+ * booking and frees the room). Checking IN is a per-attendee action and lives
+ * in the shared check-in modal — see components/office/check-in-form.tsx.
+ */
+export function CheckOutAction({
   bookingId,
-  personId,
-  status,
-  hasCheckedIn,
-  hasCheckedOut,
+  ownerId,
+  qrToken,
 }: {
   bookingId: string;
-  personId: string;
-  status: string;
-  hasCheckedIn: boolean;
-  hasCheckedOut: boolean;
+  ownerId: string;
+  qrToken: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  if (status === "CANCELLED") {
-    return <p className="text-sm text-danger">This booking was cancelled.</p>;
-  }
-  if (status === "NO_SHOW") {
-    return <p className="text-sm text-danger">This booking was marked as a no-show.</p>;
-  }
-  if (status === "COMPLETED" || hasCheckedOut) {
-    return <p className="text-sm text-success">This booking is complete. Thanks!</p>;
-  }
-
-  function handleCheckIn() {
-    startTransition(async () => {
-      const result = await checkInAction(bookingId, "QR", personId);
-      if (!result.success) {
-        setMessage({ type: "error", text: result.error });
-        return;
-      }
-      setMessage({
-        type: "success",
-        text: result.data.late ? "Checked in — note: this was a late check-in." : "Checked in successfully.",
-      });
-      router.refresh();
-    });
-  }
+  const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
   function handleCheckOut() {
+    setError(null);
     startTransition(async () => {
-      const result = await checkOutAction(bookingId, "QR", personId);
+      const result = await checkOutAction(bookingId, "QR", ownerId, qrToken);
       if (!result.success) {
-        setMessage({ type: "error", text: result.error });
+        setError(result.error);
+        setConfirming(false);
         return;
       }
-      setMessage({ type: "success", text: "Checked out. See you next time!" });
       router.refresh();
     });
   }
 
   return (
-    <div>
-      {hasCheckedIn && !hasCheckedOut && (
-        <div className="mb-3 rounded-lg bg-warning/10 p-3 text-sm text-warning">
-          You&apos;re checked in. Come back to this page (or scan the QR again) and tap{" "}
-          <strong>Check out</strong> before you leave the room.
-        </div>
-      )}
-      {message && (
-        <p className={`mb-3 text-sm ${message.type === "success" ? "text-success" : "text-danger"}`}>
-          {message.text}
+    <div className="rounded-lg bg-black/[0.035] p-4">
+      <p className="text-sm font-medium text-ink">Done with the room?</p>
+      <p className="mt-0.5 text-sm text-muted">
+        Whoever booked it can check the booking out when the team leaves, so the room shows as free again.
+      </p>
+      {error && (
+        <p role="alert" className="mt-2 text-sm text-danger">
+          {error}
         </p>
       )}
-      {!hasCheckedIn ? (
-        <Button className="w-full" disabled={isPending} onClick={handleCheckIn}>
-          {isPending ? "Checking in…" : "Check in"}
-        </Button>
+      {confirming ? (
+        <div className="mt-3 flex gap-2">
+          <Button size="touch" disabled={isPending} onClick={handleCheckOut}>
+            {isPending ? "Checking out…" : "Yes, check out"}
+          </Button>
+          <Button size="touch" variant="ghost" disabled={isPending} onClick={() => setConfirming(false)}>
+            Not yet
+          </Button>
+        </div>
       ) : (
-        <Button className="w-full" disabled={isPending} onClick={handleCheckOut}>
-          {isPending ? "Checking out…" : "Check out"}
+        <Button size="touch" variant="secondary" className="mt-3" onClick={() => setConfirming(true)}>
+          Check out the booking
         </Button>
       )}
     </div>

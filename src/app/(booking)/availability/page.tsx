@@ -1,22 +1,19 @@
 export const dynamic = "force-dynamic";
 
-import { getRoomTimelines } from "@/lib/room-timeline";
-import { getMonthOverview } from "@/lib/month-overview";
-import { getSettings } from "@/lib/settings";
-import { todayInAppTz } from "@/lib/time";
+import Link from "next/link";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { rooms } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { RoomAvailabilityBoard } from "@/components/booking/room-availability-board";
-import { MonthCalendar } from "@/components/booking/month-calendar";
-import Link from "next/link";
+import { getSettings } from "@/lib/settings";
+import { getDaySchedule, getMonthDays } from "@/lib/schedule";
+import { todayInAppTz, nowInAppTz } from "@/lib/time";
+import { ScheduleExplorer } from "@/components/office/schedule-explorer";
+import { BookRoomButton } from "@/components/office/booking-buttons";
+import { ErrorState } from "@/components/ui/error-state";
 
-function shiftDate(dateStr: string, days: number): string {
-  const d = new Date(dateStr + "T00:00:00Z");
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+/** Room availability: the same calendar + timeline as the homepage, optionally narrowed to one room. */
 export default async function AvailabilityPage({
   searchParams,
 }: {
@@ -24,98 +21,54 @@ export default async function AvailabilityPage({
 }) {
   const sp = await searchParams;
   const today = todayInAppTz();
-  const roomSlug = sp.room;
-  const roomParam = roomSlug ? `&room=${roomSlug}` : "";
 
-  const selectedRoom = roomSlug ? await db.query.rooms.findFirst({ where: eq(rooms.slug, roomSlug) }) : null;
+  // Old links used ?month=YYYY-MM; honour them by landing on the 1st of that month.
+  let initialDate = today;
+  if (sp.date && DATE_RE.test(sp.date) && !Number.isNaN(Date.parse(sp.date))) initialDate = sp.date;
+  else if (sp.month && /^\d{4}-\d{2}$/.test(sp.month)) initialDate = `${sp.month}-01`;
 
-  // --- Day view -----------------------------------------------------------
-  if (sp.date) {
-    const allEntries = await getRoomTimelines(sp.date);
-    const entries = selectedRoom ? allEntries.filter((e) => e.room.slug === selectedRoom.slug) : allEntries;
-    const monthOfDate = sp.date.slice(0, 7);
+  const data = await Promise.all([
+    getSettings(),
+    sp.room ? db.query.rooms.findFirst({ where: eq(rooms.slug, sp.room) }) : Promise.resolve(undefined),
+    getDaySchedule(initialDate),
+    getMonthDays(initialDate.slice(0, 7)),
+  ]).catch(() => null);
 
+  if (!data) {
     return (
-      <div className="mx-auto max-w-xl px-5 py-10">
-        <div className="mb-6">
-          <Link
-            href={`/availability?month=${monthOfDate}${roomParam}`}
-            className="text-sm text-muted hover:text-ink"
-          >
-            ← Back to month
-          </Link>
-          <div className="mt-2 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-ink">
-                {selectedRoom ? selectedRoom.name : "Room availability"}
-              </h1>
-              <p className="mt-1 text-sm text-muted tabular">{sp.date}</p>
-            </div>
-            <Link href="/" className="text-sm text-ink underline decoration-line-strong hover:decoration-ink">
-              Book a room →
-            </Link>
-          </div>
-        </div>
-
-        <div className="mb-4 flex items-center justify-center gap-4 text-sm">
-          <Link href={`/availability?date=${shiftDate(sp.date, -1)}${roomParam}`} className="text-muted hover:text-ink">
-            ← Previous day
-          </Link>
-          <Link href={`/availability${roomParam ? `?room=${roomSlug}` : ""}`} className="font-medium text-brand hover:underline">
-            Today
-          </Link>
-          <Link href={`/availability?date=${shiftDate(sp.date, 1)}${roomParam}`} className="text-muted hover:text-ink">
-            Next day →
-          </Link>
-        </div>
-
-        <RoomAvailabilityBoard entries={entries} />
+      <div className="mx-auto max-w-xl px-5 py-16">
+        <ErrorState message="We couldn't load the schedule. Please refresh in a moment." />
       </div>
     );
   }
-
-  // --- Month view (default) ------------------------------------------------
-  const settings = await getSettings();
-  const month = sp.month ?? today.slice(0, 7);
-  const overview = await getMonthOverview(month, roomSlug);
+  const [settings, room, schedule, monthDays] = data;
 
   return (
-    <div className="mx-auto max-w-md px-5 py-10">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="mx-auto max-w-5xl px-5 py-8 sm:py-10">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-ink">
-            {selectedRoom ? selectedRoom.name : "Room availability"}
-          </h1>
-          <p className="mt-1 text-sm text-muted">Pick a day to see its hour-by-hour schedule.</p>
+          {room && (
+            <Link href="/availability" className="text-xs text-muted hover:text-ink">
+              ← All rooms
+            </Link>
+          )}
+          <h1 className="text-2xl font-semibold text-ink">{room ? room.name : "Room availability"}</h1>
         </div>
-        <Link href="/" className="text-sm text-ink underline decoration-line-strong hover:decoration-ink">
-          Book →
-        </Link>
+        <BookRoomButton size="touch" className="sm:hidden" />
       </div>
-
-      {selectedRoom && (
-        <Link href="/availability" className="mb-3 inline-block text-xs text-muted hover:text-ink">
-          ← All rooms
-        </Link>
-      )}
-
-      <div className="rounded-xl border border-line bg-surface p-4">
-        <MonthCalendar
-          month={month}
-          today={today}
-          overview={overview}
-          roomSlug={roomSlug}
-          bookingStartDate={settings.bookingStartDate}
-          bookingEndDate={settings.bookingEndDate}
-        />
-      </div>
-
-      <Link
-        href={`/availability?date=${today}${roomParam}`}
-        className="mt-4 block text-center text-sm font-medium text-brand hover:underline"
-      >
-        Jump to today →
-      </Link>
+      <ScheduleExplorer
+        heading={room ? "Schedule" : "All rooms"}
+        today={today}
+        nowMs={nowInAppTz().getTime()}
+        initialDate={initialDate}
+        initialSchedule={schedule}
+        initialMonthDays={monthDays}
+        minBookingMinutes={settings.minBookingMinutes}
+        bookingStartDate={settings.bookingStartDate}
+        bookingEndDate={settings.bookingEndDate}
+        roomSlug={room?.slug}
+        showBookButton
+      />
     </div>
   );
 }

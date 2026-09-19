@@ -5,6 +5,9 @@ import { bookings, rooms } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { getAttendeeCounts } from "@/lib/booking/attendance";
+import { AttendanceCell } from "@/components/admin/attendance-cell";
 import { BookingRowActions } from "@/components/admin/booking-row-actions";
 import { BookingsFilterBar } from "@/components/admin/bookings-filter-bar";
 
@@ -57,6 +60,14 @@ export default async function AdminBookingsPage({
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const attendeeCounts = await getAttendeeCounts(pageRows.map((b) => b.id));
+
+  const pageHref = (n: number) => {
+    const params = new URLSearchParams();
+    for (const key of ["q", "room", "status", "date"] as const) if (sp[key]) params.set(key, sp[key]!);
+    params.set("page", String(n));
+    return `/admin/bookings?${params.toString()}`;
+  };
 
   return (
     <div>
@@ -77,6 +88,7 @@ export default async function AdminBookingsPage({
               <th className="px-4 py-2.5 font-medium">Date</th>
               <th className="px-4 py-2.5 font-medium">Time</th>
               <th className="px-4 py-2.5 font-medium">Status</th>
+              <th className="px-4 py-2.5 font-medium">People</th>
               <th className="px-4 py-2.5 font-medium">Check-in</th>
               <th className="px-4 py-2.5 font-medium">Check-out</th>
               <th className="px-4 py-2.5 font-medium">Actions</th>
@@ -95,6 +107,13 @@ export default async function AdminBookingsPage({
                 <td className="px-4 py-2.5">
                   <Badge variant={STATUS_VARIANT[b.status]}>{b.status.replace("_", " ")}</Badge>
                 </td>
+                <td className="px-4 py-2 text-xs">
+                  <AttendanceCell
+                    bookingId={b.id}
+                    count={attendeeCounts.get(b.id) ?? 0}
+                    label={`${b.person.name} · ${b.room.name}, ${b.date} ${b.startTime.slice(0, 5)}`}
+                  />
+                </td>
                 <td className="px-4 py-2.5 tabular text-xs text-muted">
                   {b.actualCheckInAt ? new Date(b.actualCheckInAt).toLocaleTimeString() : "—"}
                 </td>
@@ -108,7 +127,7 @@ export default async function AdminBookingsPage({
             ))}
             {pageRows.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-muted">
+                <td colSpan={10} className="px-4 py-8 text-center text-muted">
                   No bookings match these filters.
                 </td>
               </tr>
@@ -118,9 +137,25 @@ export default async function AdminBookingsPage({
       </Card>
 
       {totalPages > 1 && (
-        <p className="mt-3 text-center text-xs text-muted">
-          Page {page} of {totalPages}
-        </p>
+        <nav className="mt-3 flex items-center justify-center gap-4 text-sm" aria-label="Pagination">
+          {page > 1 ? (
+            <Link href={pageHref(page - 1)} className="text-ink-soft hover:text-ink">
+              ← Previous
+            </Link>
+          ) : (
+            <span className="text-muted/50">← Previous</span>
+          )}
+          <span className="text-xs text-muted">
+            Page {page} of {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Link href={pageHref(page + 1)} className="text-ink-soft hover:text-ink">
+              Next →
+            </Link>
+          ) : (
+            <span className="text-muted/50">Next →</span>
+          )}
+        </nav>
       )}
     </div>
   );

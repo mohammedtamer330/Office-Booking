@@ -24,6 +24,14 @@ export const checkInSchema = z.object({
   method: z.enum(["QR", "BOOKING_PAGE", "ADMIN_MANUAL"]),
 });
 
+// Attendee check-in. The name itself is normalized and validated in
+// lib/booking/attendance.ts (so the rules live next to the duplicate check);
+// this only guards the shape of the request.
+export const attendeeCheckInSchema = z.object({
+  bookingId: z.string().uuid("Invalid booking."),
+  name: z.string().max(200, "That name is too long."),
+});
+
 export const checkOutSchema = z.object({
   bookingId: z.string().uuid(),
   method: z.enum(["QR", "BOOKING_PAGE", "ADMIN_MANUAL"]),

@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { bookings } from "@/db/schema";
-import { and, gte, lte } from "drizzle-orm";
+import { bookingAttendees, bookings } from "@/db/schema";
+import { and, eq, gte, lte } from "drizzle-orm";
 
 export async function getAnalytics(startDate: string, endDate: string) {
   const rows = await db.query.bookings.findMany({
@@ -67,8 +67,30 @@ export async function getAnalytics(startDate: string, endDate: string) {
   }
   const byFunction = Array.from(byFunctionMap.entries()).map(([label, v]) => ({ label, ...v }));
 
+  // Attendance: who actually showed up (one row per person who checked in), not just whether the owner did.
+  const attendeeRows = await db
+    .select({ bookingId: bookingAttendees.bookingId, status: bookingAttendees.status, date: bookings.date })
+    .from(bookingAttendees)
+    .innerJoin(bookings, eq(bookingAttendees.bookingId, bookings.id))
+    .where(and(gte(bookings.date, startDate), lte(bookings.date, endDate)));
+
+  const totalAttendance = attendeeRows.length;
+  const lateArrivals = attendeeRows.filter((a) => a.status === "LATE").length;
+  const lateArrivalRate = totalAttendance > 0 ? Math.round((lateArrivals / totalAttendance) * 100) : 0;
+  const attendedBookings = new Set(attendeeRows.map((a) => a.bookingId)).size;
+  const avgAttendeesPerBooking = attendedBookings > 0 ? Math.round((totalAttendance / attendedBookings) * 10) / 10 : 0;
+  const attendanceByDayMap = new Map<string, number>();
+  for (const a of attendeeRows) attendanceByDayMap.set(a.date, (attendanceByDayMap.get(a.date) ?? 0) + 1);
+  const attendanceByDay = Array.from(attendanceByDayMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, count]) => ({ date, count }));
+
   return {
     total,
+    totalAttendance,
+    avgAttendeesPerBooking,
+    lateArrivalRate,
+    attendanceByDay,
     checkInRate,
     noShowRate,
     cancellationRate,

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { buildFunctionBrand } from "@/lib/config/function-branding";
 import Link from "next/link";
 import Image from "next/image";
+import { formatDayLong, formatRange } from "@/lib/schedule-types";
 
 export default async function ConfirmationPage({
   params,
@@ -43,14 +44,14 @@ export default async function ConfirmationPage({
           <Image src={dataUrl} alt="Booking QR code" width={220} height={220} unoptimized />
         </div>
         <p className="mt-3 text-center text-xs text-muted">
-          Scan at the room to check in, or use the button below.
+          Show this to your team. Everyone who comes checks in with their own name.
         </p>
-        <p className="mt-1 text-center text-xs text-warning">
-          Don&apos;t forget to check out the same way when you leave.
+        <p className="mt-1 text-center text-xs text-muted">
+          When you leave, the person who booked can end the booking from the check-in page.
         </p>
 
         <dl className="mt-6 grid grid-cols-2 gap-y-3 text-sm">
-          <dt className="text-muted">Name</dt>
+          <dt className="text-muted">Booked by</dt>
           <dd className="font-medium text-ink">{booking.person.name}</dd>
           <dt className="text-muted">Function</dt>
           <dd>
@@ -61,10 +62,10 @@ export default async function ConfirmationPage({
           <dt className="text-muted">Room</dt>
           <dd className="text-ink">{booking.room.name}</dd>
           <dt className="text-muted">Date</dt>
-          <dd className="text-ink tabular">{booking.date}</dd>
+          <dd className="text-ink tabular">{formatDayLong(booking.date)}</dd>
           <dt className="text-muted">Time</dt>
           <dd className="text-ink tabular">
-            {booking.startTime.slice(0, 5)}–{booking.endTime.slice(0, 5)}
+            {formatRange(booking.startTime.slice(0, 5), booking.endTime.slice(0, 5))}
           </dd>
           <dt className="text-muted">Status</dt>
           <dd>

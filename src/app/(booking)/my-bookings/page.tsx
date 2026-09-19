@@ -1,10 +1,12 @@
 export const dynamic = "force-dynamic";
 
+import { nowInAppTz } from "@/lib/time";
 import { db } from "@/db";
-import { bookings, people } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { people } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { PersonPicker } from "@/components/booking/person-picker";
 import { MyBookingsList } from "@/components/booking/my-bookings-list";
+import { getPersonBookings } from "@/lib/schedule";
 
 export default async function MyBookingsPage({
   searchParams,
@@ -18,26 +20,23 @@ export default async function MyBookingsPage({
     orderBy: (t, { asc }) => asc(t.name),
   });
 
-  const personBookings = personId
-    ? await db.query.bookings.findMany({
-        where: eq(bookings.personId, personId),
-        with: { room: true },
-        orderBy: [desc(bookings.date), desc(bookings.startTime)],
-      })
-    : [];
+  const validPerson = personId && allPeople.some((p) => p.id === personId) ? personId : undefined;
+  const personBookings = validPerson ? await getPersonBookings(validPerson) : [];
 
   return (
     <div className="mx-auto max-w-xl px-5 py-10">
       <h1 className="text-2xl font-semibold text-ink">My bookings</h1>
-      <p className="mt-1 text-sm text-muted">Select your name to see your booking history.</p>
+      <p className="mt-1 text-sm text-muted">
+        Select your name to see the bookings you made and who has checked in to each.
+      </p>
 
       <div className="mt-5">
-        <PersonPicker people={allPeople} selectedId={personId} />
+        <PersonPicker people={allPeople} selectedId={validPerson} />
       </div>
 
-      {personId && (
+      {validPerson && (
         <div className="mt-6">
-          <MyBookingsList bookings={personBookings} personId={personId} />
+          <MyBookingsList bookings={personBookings} personId={validPerson} nowMs={nowInAppTz().getTime()} />
         </div>
       )}
     </div>

@@ -23,18 +23,21 @@ export async function effectiveStatus(booking: typeof bookings.$inferSelect, gra
   return booking.status;
 }
 
-export async function checkIn(bookingId: string, method: CheckMethod, actorId: string) {
-  const booking = await db.query.bookings.findFirst({ where: eq(bookings.id, bookingId) });
-  if (!booking) throw new BookingError("BOOKING_NOT_FOUND", "Booking not found.");
-  if (booking.status === "CANCELLED") throw new BookingError("CANCELLED", "This booking was cancelled.");
-  if (booking.status === "COMPLETED") throw new BookingError("ALREADY_COMPLETED", "This booking is already completed.");
-  if (booking.actualCheckInAt) throw new BookingError("ALREADY_CHECKED_IN", "Already checked in.");
+type CheckInWindowInput = Pick<typeof bookings.$inferSelect, "date" | "startTime">;
 
-  const settings = await getSettings();
+/**
+ * The single definition of "is check-in allowed right now, and is it late?".
+ * Used by the booking-level check-in below AND by every attendee check-in
+ * (lib/booking/attendance.ts) so the two can never disagree.
+ */
+export function evaluateCheckInWindow(
+  booking: CheckInWindowInput,
+  settings: Awaited<ReturnType<typeof getSettings>>,
+  now: Date,
+): { late: boolean } {
   const startAt = combineDateAndTimeInAppTz(booking.date, booking.startTime);
   const windowStart = new Date(startAt.getTime() - settings.checkInWindowBeforeMinutes * 60000);
   const windowEnd = new Date(startAt.getTime() + settings.checkInWindowAfterMinutes * 60000);
-  const now = nowInAppTz();
 
   if (now < windowStart) {
     throw new BookingError(
@@ -43,13 +46,29 @@ export async function checkIn(bookingId: string, method: CheckMethod, actorId: s
     );
   }
 
-  const isLate = now > windowEnd;
-  if (isLate) {
-    if (settings.lateCheckInPolicy === "BLOCK") {
-      throw new BookingError("CHECK_IN_WINDOW_CLOSED", "The check-in window for this booking has closed.");
-    }
-    // ALLOW / ALLOW_WITH_WARNING both proceed; the warning is surfaced by the caller.
+  const late = now > windowEnd;
+  if (late && settings.lateCheckInPolicy === "BLOCK") {
+    throw new BookingError("CHECK_IN_WINDOW_CLOSED", "The check-in window for this booking has closed.");
   }
+  // ALLOW / ALLOW_WITH_WARNING both proceed; the warning is surfaced by the caller.
+  return { late };
+}
+
+/**
+ * Booking-level check-in. The public check-in flow now goes through
+ * checkInAttendee (which also sets this booking-level state on the first
+ * arrival); this remains for the admin's manual override.
+ */
+export async function checkIn(bookingId: string, method: CheckMethod, actorId: string) {
+  const booking = await db.query.bookings.findFirst({ where: eq(bookings.id, bookingId) });
+  if (!booking) throw new BookingError("BOOKING_NOT_FOUND", "Booking not found.");
+  if (booking.status === "CANCELLED") throw new BookingError("CANCELLED", "This booking was cancelled.");
+  if (booking.status === "COMPLETED") throw new BookingError("ALREADY_COMPLETED", "This booking is already completed.");
+  if (booking.actualCheckInAt) throw new BookingError("ALREADY_CHECKED_IN", "Already checked in.");
+
+  const settings = await getSettings();
+  const now = nowInAppTz();
+  const { late: isLate } = evaluateCheckInWindow(booking, settings, now);
 
   const [updated] = await db
     .update(bookings)
@@ -105,6 +124,11 @@ export async function cancelBooking(bookingId: string, cancelledBy: "user" | "ad
   if (booking.status === "COMPLETED") throw new BookingError("ALREADY_COMPLETED", "Cannot cancel a completed booking.");
 
   if (cancelledBy === "user") {
+    // Only the person who made the booking can cancel it as a "user";
+    // admins cancel with cancelledBy = "admin" (which the action layer gates on the admin session).
+    if (booking.personId !== actorId) {
+      throw new BookingError("NOT_BOOKING_OWNER", "Only the person who made this booking can cancel it.");
+    }
     const settings = await getSettings();
     const startAt = combineDateAndTimeInAppTz(booking.date, booking.startTime);
     const now = nowInAppTz();

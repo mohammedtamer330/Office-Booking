@@ -32,6 +32,10 @@ export const checkInMethodEnum = pgEnum("check_in_method", [
   "ADMIN_MANUAL",
 ]);
 
+// How punctual an individual attendee was, judged by the same check-in window
+// the booking-level check-in uses (settings.checkInWindowAfterMinutes).
+export const attendanceStatusEnum = pgEnum("attendance_status", ["ON_TIME", "LATE"]);
+
 export const auditActionEnum = pgEnum("audit_action", [
   "BOOKING_CREATED",
   "BOOKING_EDITED",
@@ -166,6 +170,30 @@ export const checkOuts = pgTable("check_outs", {
   actorId: text("actor_id"),
 });
 
+// One row per person who checked in to a booking. The booking itself still
+// belongs to a single owner (bookings.personId); attendees are whoever walks
+// in and checks in with their own name. Everything else about the booking —
+// owner, function, room, date, scheduled start/end — is reached through
+// booking_id rather than copied here, so it can never drift out of sync.
+// (bookings.actualCheckInAt/status still record the FIRST arrival, exactly as
+// before, so no-show detection and existing analytics keep working.)
+//
+// The unique (booking_id, name_key) index in drizzle/0003_booking_attendance.sql
+// is what makes a duplicate check-in impossible even under a race.
+export const bookingAttendees = pgTable("booking_attendees", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  bookingId: uuid("booking_id")
+    .notNull()
+    .references(() => bookings.id, { onDelete: "cascade" }),
+  attendeeName: text("attendee_name").notNull(), // as typed (trimmed, spaces collapsed)
+  nameKey: text("name_key").notNull(), // normalized form used for duplicate detection
+  personId: uuid("person_id").references(() => people.id, { onDelete: "set null" }), // set only when the name matches a known person exactly
+  status: attendanceStatusEnum("status").notNull().default("ON_TIME"),
+  method: checkInMethodEnum("method").notNull().default("BOOKING_PAGE"),
+  checkedInAt: timestamp("checked_in_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // ---------------------------------------------------------------------------
 // Audit log
 // ---------------------------------------------------------------------------
@@ -232,6 +260,12 @@ export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   room: one(rooms, { fields: [bookings.roomId], references: [rooms.id] }),
   checkIns: many(checkIns),
   checkOuts: many(checkOuts),
+  attendees: many(bookingAttendees),
+}));
+
+export const bookingAttendeesRelations = relations(bookingAttendees, ({ one }) => ({
+  booking: one(bookings, { fields: [bookingAttendees.bookingId], references: [bookings.id] }),
+  person: one(people, { fields: [bookingAttendees.personId], references: [people.id] }),
 }));
 
 export const checkInsRelations = relations(checkIns, ({ one }) => ({

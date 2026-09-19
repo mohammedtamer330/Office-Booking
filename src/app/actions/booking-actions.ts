@@ -6,8 +6,11 @@ import { checkIn, checkOut, cancelBooking } from "@/lib/booking/lifecycle";
 import { createBookingSchema } from "@/lib/validation/schemas";
 import { checkInUrlForToken, generateQrDataUrl } from "@/lib/qr";
 import { headers } from "next/headers";
-
-type ActionResult<T> = { success: true; data: T } | { success: false; error: string; code?: string };
+import { db } from "@/db";
+import { bookings } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { isAdmin, ADMIN_REQUIRED_MESSAGE } from "@/lib/auth/require-admin";
+import type { ActionResult } from "@/lib/action-result";
 
 export async function createBookingAction(
   rawInput: unknown,
@@ -19,6 +22,7 @@ export async function createBookingAction(
 
   try {
     const booking = await createBooking(parsed.data);
+    revalidatePath("/");
     revalidatePath("/my-bookings");
     return { success: true, data: { bookingId: booking.id, bookingCode: booking.bookingCode } };
   } catch (err) {
@@ -45,6 +49,11 @@ export async function checkInAction(
   method: "QR" | "BOOKING_PAGE" | "ADMIN_MANUAL",
   actorId: string,
 ): Promise<ActionResult<{ late: boolean }>> {
+  // The public check-in flow now asks for the attendee's name and goes through
+  // checkInAttendeeAction. What's left here is the admin's manual override.
+  if (!(await isAdmin())) {
+    return { success: false, error: "Check-in now needs your name. Please refresh the page and try again.", code: "USE_ATTENDEE_CHECK_IN" };
+  }
   try {
     const result = await checkIn(bookingId, method, actorId);
     revalidatePath("/my-bookings");
@@ -61,9 +70,27 @@ export async function checkOutAction(
   bookingId: string,
   method: "QR" | "BOOKING_PAGE" | "ADMIN_MANUAL",
   actorId: string,
+  qrToken?: string,
 ): Promise<ActionResult<null>> {
+  if (method === "ADMIN_MANUAL") {
+    if (!(await isAdmin())) {
+      return { success: false, error: ADMIN_REQUIRED_MESSAGE, code: "UNAUTHORIZED" };
+    }
+  } else {
+    // Booking ids are visible on the public schedule, so a booking id alone must not be enough
+    // to end someone's booking. The owner's private QR link carries the token that proves it.
+    const booking = await db.query.bookings.findFirst({ where: eq(bookings.id, bookingId) });
+    if (!booking || !qrToken || booking.qrToken !== qrToken) {
+      return {
+        success: false,
+        error: "Open the booking's QR link to check out.",
+        code: "UNAUTHORIZED",
+      };
+    }
+  }
   try {
     await checkOut(bookingId, method, actorId);
+    revalidatePath("/");
     revalidatePath("/my-bookings");
     revalidatePath("/admin");
     return { success: true, data: null };
@@ -79,6 +106,9 @@ export async function cancelBookingAction(
   cancelledBy: "user" | "admin",
   actorId: string,
 ): Promise<ActionResult<null>> {
+  if (cancelledBy === "admin" && !(await isAdmin())) {
+    return { success: false, error: ADMIN_REQUIRED_MESSAGE, code: "UNAUTHORIZED" };
+  }
   try {
     await cancelBooking(bookingId, cancelledBy, actorId);
     revalidatePath("/my-bookings");

@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { getAnalytics } from "@/lib/admin/analytics-data";
 import { getSettings } from "@/lib/settings";
 import { todayInAppTz } from "@/lib/time";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { AnalyticsCharts } from "@/components/admin/analytics-charts";
 import { AnalyticsRangePicker } from "@/components/admin/analytics-range-picker";
 
@@ -21,7 +21,10 @@ export default async function AnalyticsPage({
 
   const metrics = [
     { label: "Total bookings", value: data.total },
-    { label: "Check-in rate", value: `${data.checkInRate}%` },
+    { label: "Booking check-in rate", value: `${data.checkInRate}%` },
+    { label: "People checked in", value: data.totalAttendance },
+    { label: "Avg. people per booking", value: data.avgAttendeesPerBooking },
+    { label: "Late arrivals", value: `${data.lateArrivalRate}%` },
     { label: "No-show rate", value: `${data.noShowRate}%` },
     { label: "Cancellation rate", value: `${data.cancellationRate}%` },
     { label: "Avg. duration", value: `${data.avgDurationMinutes} min` },
@@ -40,7 +43,7 @@ export default async function AnalyticsPage({
         <AnalyticsRangePicker start={start} end={end} />
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {metrics.map((m) => (
           <Card key={m.label} className="p-4">
             <p className="text-xl font-semibold text-ink tabular">{m.value}</p>

@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import type { BookedSlot } from "@/lib/types";
+import { formatTime12 } from "@/lib/schedule-types";
 
 const STEP_MINUTES = 30;
 const DAY_START_MIN = 8 * 60;
@@ -66,7 +67,7 @@ export function TimeSlotPicker({
     <div>
       <div>
         <p className="mb-2 text-xs font-medium text-muted">Start time</p>
-        <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-7">
+        <div className="grid grid-cols-3 gap-1.5 min-[420px]:grid-cols-4 sm:grid-cols-5">
           {slots.slice(0, -1).map((m) => {
             const booked = isWithinBooking(m, bookedSlots);
             const past = nowFloorMinutes !== undefined && m < nowFloorMinutes;
@@ -82,14 +83,14 @@ export function TimeSlotPicker({
                   onChangeEnd(""); // force re-pick of end time against the new ceiling
                 }}
                 className={cn(
-                  "rounded-md border px-1.5 py-1.5 text-[12px] tabular transition-colors",
+                  "min-h-10 rounded-md border px-1.5 py-1.5 text-[13px] tabular transition-colors active:scale-[0.98]",
                   selected && "border-ink bg-ink text-white",
                   !selected && !disabled && "border-line-strong text-ink hover:bg-black/[0.04]",
                   disabled && "cursor-not-allowed border-line bg-black/[0.03] text-muted/60 line-through",
                 )}
                 title={booked ? "Already booked" : past ? "In the past" : undefined}
               >
-                {toTimeString(m)}
+                {formatTime12(toTimeString(m))}
               </button>
             );
           })}
@@ -101,10 +102,10 @@ export function TimeSlotPicker({
           <p className="mb-2 text-xs font-medium text-muted">
             End time
             {endCeiling !== null && endCeiling < DAY_END_MIN && (
-              <span className="ml-1 text-muted/70">(next booking starts at {toTimeString(endCeiling)})</span>
+              <span className="ml-1 text-muted/70">(next booking starts at {formatTime12(toTimeString(endCeiling))})</span>
             )}
           </p>
-          <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-7">
+          <div className="grid grid-cols-3 gap-1.5 min-[420px]:grid-cols-4 sm:grid-cols-5">
             {slots
               .filter((m) => m > startMinutes)
               .map((m) => {
@@ -119,14 +120,14 @@ export function TimeSlotPicker({
                     disabled={disabled}
                     onClick={() => onChangeEnd(toTimeString(m))}
                     className={cn(
-                      "rounded-md border px-1.5 py-1.5 text-[12px] tabular transition-colors",
+                      "min-h-10 rounded-md border px-1.5 py-1.5 text-[13px] tabular transition-colors active:scale-[0.98]",
                       selected && "border-brand bg-brand text-white",
                       !selected && !disabled && "border-line-strong text-ink hover:bg-black/[0.04]",
                       disabled && "cursor-not-allowed border-line bg-black/[0.03] text-muted/60 line-through",
                     )}
                     title={tooSoon ? `Minimum booking is ${minDurationMinutes} min` : tooLate ? "Past the allowed limit" : undefined}
                   >
-                    {toTimeString(m)}
+                    {formatTime12(toTimeString(m))}
                   </button>
                 );
               })}
