@@ -8,10 +8,15 @@ export function normalizeEmail(email: string): string {
 }
 
 async function findActiveMemberByEmail(email: string) {
-  return db.query.people.findFirst({
-    where: (t, { sql }) => sql`lower(${t.email}) = ${email}`,
-    with: { role: true, function: true },
-  });
+  try {
+    return await db.query.people.findFirst({
+      where: (t, { sql }) => sql`lower(${t.email}) = ${email}`,
+      with: { role: true, function: true },
+    });
+  } catch (err) {
+    console.error("[member-auth] DB lookup failed while checking a sign-in email:", err);
+    return undefined;
+  }
 }
 
 /**
