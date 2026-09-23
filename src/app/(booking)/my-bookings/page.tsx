@@ -1,44 +1,49 @@
 export const dynamic = "force-dynamic";
 
+import Link from "next/link";
 import { nowInAppTz } from "@/lib/time";
-import { db } from "@/db";
-import { people } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { PersonPicker } from "@/components/booking/person-picker";
 import { MyBookingsList } from "@/components/booking/my-bookings-list";
 import { getPersonBookings } from "@/lib/schedule";
+import { getCurrentMember } from "@/lib/auth/current-member";
+import { Button } from "@/components/ui/button";
+import { FadeIn } from "@/components/motion/primitives";
 
-export default async function MyBookingsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ person?: string }>;
-}) {
-  const { person: personId } = await searchParams;
+export default async function MyBookingsPage() {
+  const member = await getCurrentMember();
 
-  const allPeople = await db.query.people.findMany({
-    where: eq(people.active, true),
-    orderBy: (t, { asc }) => asc(t.name),
-  });
+  if (!member) {
+    return (
+      <div className="mx-auto max-w-xl px-5 py-16 text-center">
+        <FadeIn>
+          <h1 className="text-2xl font-semibold text-ink">My bookings</h1>
+          <p className="mt-2 text-sm text-muted">
+            Sign in with your AIESEC Google account to see the bookings you made and who has checked in to each.
+          </p>
+          <Button asChild size="touch" className="mt-5">
+            <Link href="/login?callbackUrl=/my-bookings">Sign in with Google</Link>
+          </Button>
+        </FadeIn>
+      </div>
+    );
+  }
 
-  const validPerson = personId && allPeople.some((p) => p.id === personId) ? personId : undefined;
-  const personBookings = validPerson ? await getPersonBookings(validPerson) : [];
+  // Identity comes only from the signed-in session above — never a client-
+  // supplied id, so there is no way to see anyone else's bookings by editing
+  // a URL or query parameter.
+  const personBookings = await getPersonBookings(member.personId);
 
   return (
     <div className="mx-auto max-w-xl px-5 py-10">
-      <h1 className="text-2xl font-semibold text-ink">My bookings</h1>
-      <p className="mt-1 text-sm text-muted">
-        Select your name to see the bookings you made and who has checked in to each.
-      </p>
-
-      <div className="mt-5">
-        <PersonPicker people={allPeople} selectedId={validPerson} />
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-ink">My bookings</h1>
+          <p className="mt-1 text-sm text-muted">Signed in as {member.name}.</p>
+        </div>
       </div>
 
-      {validPerson && (
-        <div className="mt-6">
-          <MyBookingsList bookings={personBookings} personId={validPerson} nowMs={nowInAppTz().getTime()} />
-        </div>
-      )}
+      <div className="mt-6">
+        <MyBookingsList bookings={personBookings} personId={member.personId} nowMs={nowInAppTz().getTime()} />
+      </div>
     </div>
   );
 }

@@ -66,42 +66,47 @@ export const PEOPLE: {
   role: RoleKey;
   function: FunctionKey;
   position?: string;
+  /** AIESEC Workspace email — the Google-auth identity key. Always store/compare lowercased. */
+  email: string;
 }[] = [
   // EB Team
-  { name: "Mayar Halfaya", role: "EB_TEAM", function: "LCP", position: "LCP" },
-  { name: "Tito", role: "EB_TEAM", function: "FandL", position: "LCVP F&L" },
-  { name: "Farah", role: "EB_TEAM", function: "TM", position: "LCVP TM" },
-  { name: "Body Kamal", role: "EB_TEAM", function: "oGV", position: "LCVP oGV" },
-  { name: "Borio", role: "EB_TEAM", function: "oGTa", position: "LCVP oGTa" },
-  { name: "Galal", role: "EB_TEAM", function: "B2C", position: "LCVP B2C" },
+  { name: "Mayar Halfaya", role: "EB_TEAM", function: "LCP", position: "LCP", email: "mayarhalfaya@aiesec.net" },
+  { name: "Tito", role: "EB_TEAM", function: "FandL", position: "LCVP F&L", email: "mohammedtamer@aiesec.net" },
+  { name: "Farah", role: "EB_TEAM", function: "TM", position: "LCVP TM", email: "farahamgad@aiesec.net" },
+  { name: "Body Kamal", role: "EB_TEAM", function: "oGV", position: "LCVP oGV", email: "abdullrhmankamal@aiesec.net" },
+  { name: "Borio", role: "EB_TEAM", function: "oGTa", position: "LCVP oGTa", email: "eyadalaa@aiesec.net" },
+  { name: "Galal", role: "EB_TEAM", function: "B2C", position: "LCVP B2C", email: "muhamedgalal@aiesec.net" },
 
   // LCD
-  { name: "Pascal", role: "LCD", function: "iGV", position: "LCD iGV" },
-  { name: "Ziad Abo Bakr", role: "LCD", function: "iGTe", position: "LCD iGTe" },
+  { name: "Pascal", role: "LCD", function: "iGV", position: "LCD iGV", email: "yousifayman@aiesec.net" },
+  { name: "Ziad Abo Bakr", role: "LCD", function: "iGTe", position: "LCD iGTe", email: "ziadabobakr@aiesec.net" },
 
   // MM — oGV
-  { name: "Razan", role: "MM", function: "oGV" },
-  { name: "Ezz", role: "MM", function: "oGV" },
-  { name: "Ahmed Samir", role: "MM", function: "oGV" },
-  { name: "Yasmine Sharaf", role: "MM", function: "oGV" },
+  { name: "Razan", role: "MM", function: "oGV", email: "razanmohamed@aiesec.net" },
+  { name: "Ezz", role: "MM", function: "oGV", email: "ezzaldenadel@aiesec.net" },
+  { name: "Ahmed Samir", role: "MM", function: "oGV", email: "ahmedsamir@aiesec.net" },
+  { name: "Yasmine Sharaf", role: "MM", function: "oGV", email: "yasminesharaf@aiesec.net" },
 
   // MM — oGTa
-  { name: "Ziad Mamdouh", role: "MM", function: "oGTa" },
-  { name: "Merna Mamdouh", role: "MM", function: "oGTa" },
+  { name: "Ziad Mamdouh", role: "MM", function: "oGTa", email: "ziadmamdoh@aiesec.net" },
+  { name: "Merna Mamdouh", role: "MM", function: "oGTa", email: "mernamamdoh@aiesec.net" },
 
   // MM — B2C
-  { name: "Madaa", role: "MM", function: "B2C" },
-  { name: "Samaa", role: "MM", function: "B2C" },
-  { name: "Raghad", role: "MM", function: "B2C" },
+  { name: "Madaa", role: "MM", function: "B2C", email: "mohamedhany@aiesec.net" },
+  { name: "Samaa", role: "MM", function: "B2C", email: "samaamohamed@aiesec.net" },
+  { name: "Raghad", role: "MM", function: "B2C", email: "raghaddawood@aiesec.net" },
 
   // MM — TM
-  { name: "Habiba Adel", role: "MM", function: "TM" },
+  { name: "Habiba Adel", role: "MM", function: "TM", email: "habibaadel@aiesec.net" },
 
   // MM — Finance
-  { name: "Nour", role: "MM", function: "Finance" },
+  { name: "Nour", role: "MM", function: "Finance", email: "nourelden@aiesec.net" },
 
   // MM — iGV
-  { name: "CJ", role: "MM", function: "iGV" },
-  { name: "Amr Zohair", role: "MM", function: "iGV" },
-  { name: "Ali Adel", role: "MM", function: "iGV" },
+  { name: "CJ", role: "MM", function: "iGV", email: "abdelrahmanzuelhema@aiesec.net" },
+  { name: "Amr Zohair", role: "MM", function: "iGV", email: "amrzohier@aiesec.net" },
+  { name: "Ali Adel", role: "MM", function: "iGV", email: "aliadel@aiesec.net" },
 ];
+
+/** Domain allowed to authenticate as a member (see src/lib/auth/member-config.ts). */
+export const AIESEC_EMAIL_DOMAIN = "aiesec.net";

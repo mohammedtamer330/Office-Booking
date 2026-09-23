@@ -2,13 +2,14 @@ import Image from "next/image";
 import { SiteHeader } from "@/components/site-header";
 import { OfficeUiProvider } from "@/components/office/office-ui-provider";
 import { getBookingBundle } from "@/lib/booking-bundle";
+import { getCurrentMember } from "@/lib/auth/current-member";
 
 export const dynamic = "force-dynamic";
 
 export default async function BookingLayout({ children }: { children: React.ReactNode }) {
-  const bundle = await getBookingBundle();
+  const [bundle, currentMember] = await Promise.all([getBookingBundle(), getCurrentMember()]);
   return (
-    <OfficeUiProvider bundle={bundle}>
+    <OfficeUiProvider bundle={bundle} currentMember={currentMember}>
       <div className="flex min-h-screen flex-col">
         <SiteHeader />
         <main className="flex-1 bg-background">{children}</main>

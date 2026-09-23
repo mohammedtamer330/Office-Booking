@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BookingDialog, type BookingDialogState } from "@/components/office/booking-dialog";
 import { BookRoomDialog, type BookPrefill } from "@/components/office/book-room-dialog";
 import type { BookingReferenceBundle } from "@/lib/types";
+import type { CurrentMember } from "@/lib/auth/current-member";
 
 // Same key the My bookings person picker already uses, so "who am I on this device" is one thing.
 const PERSON_KEY = "aiesec-booking:last-person-id";
@@ -59,9 +60,11 @@ export function useOfficeUi(): OfficeUi {
  */
 export function OfficeUiProvider({
   bundle,
+  currentMember,
   children,
 }: {
   bundle: BookingReferenceBundle | null;
+  currentMember: CurrentMember | null;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -136,7 +139,7 @@ export function OfficeUiProvider({
           open={book.open}
           onOpenChange={(o) => setBook((b) => ({ ...b, open: o }))}
           prefill={book.prefill}
-          myPersonId={myPersonId}
+          currentMember={currentMember}
           onBooked={(personId) => {
             rememberPerson(personId);
             setVersion((v) => v + 1);

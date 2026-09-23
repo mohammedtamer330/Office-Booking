@@ -7,6 +7,7 @@ import { todayInAppTz } from "@/lib/time";
 import { buildFunctionBrand } from "@/lib/config/function-branding";
 import { Card } from "@/components/ui/card";
 import { CalendarDatePicker } from "@/components/admin/calendar-date-picker";
+import { PageTransition, StaggerRow } from "@/components/motion/primitives";
 
 const DAY_START_HOUR = 8;
 const DAY_END_HOUR = 22;
@@ -35,7 +36,7 @@ export default async function AdminCalendarPage({
   }
 
   return (
-    <div>
+    <PageTransition>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-ink">Calendar</h1>
@@ -45,7 +46,7 @@ export default async function AdminCalendarPage({
       </div>
 
       <Card className="mt-5 overflow-x-auto p-4">
-        <div className="flex" style={{ minWidth: allRooms.length * 200 + 60 }}>
+        <div className="flex" style={{ minWidth: allRooms.length * 200 + 60 }} key={date}>
           {/* Hour rail */}
           <div className="relative w-14 flex-shrink-0" style={{ height: totalHours * PX_PER_HOUR }}>
             {Array.from({ length: totalHours + 1 }).map((_, i) => (
@@ -74,14 +75,15 @@ export default async function AdminCalendarPage({
                       style={{ top: i * PX_PER_HOUR }}
                     />
                   ))}
-                  {roomBookings.map((b) => {
+                  {roomBookings.map((b, i) => {
                     const brand = buildFunctionBrand(b.person.function.color);
                     const top = positionFor(b.startTime);
                     const height = Math.max(positionFor(b.endTime) - top, 24);
                     return (
-                      <div
+                      <StaggerRow
                         key={b.id}
-                        className="absolute left-1.5 right-1.5 overflow-hidden rounded-md border px-2 py-1 text-xs"
+                        index={i}
+                        className="absolute left-1.5 right-1.5 overflow-hidden rounded-md border px-2 py-1 text-xs transition-shadow duration-150 hover:shadow-[var(--shadow-card)]"
                         style={{
                           top,
                           height,
@@ -89,13 +91,14 @@ export default async function AdminCalendarPage({
                           borderColor: brand.base,
                           color: brand.text,
                         }}
-                        title={`${b.person.name} · ${b.startTime.slice(0, 5)}–${b.endTime.slice(0, 5)}`}
                       >
-                        <p className="truncate font-medium">{b.person.name}</p>
-                        <p className="truncate tabular opacity-80">
-                          {b.startTime.slice(0, 5)}–{b.endTime.slice(0, 5)}
-                        </p>
-                      </div>
+                        <span title={`${b.person.name} · ${b.startTime.slice(0, 5)}–${b.endTime.slice(0, 5)}`}>
+                          <p className="truncate font-medium">{b.person.name}</p>
+                          <p className="truncate tabular opacity-80">
+                            {b.startTime.slice(0, 5)}–{b.endTime.slice(0, 5)}
+                          </p>
+                        </span>
+                      </StaggerRow>
                     );
                   })}
                 </div>
@@ -104,6 +107,6 @@ export default async function AdminCalendarPage({
           })}
         </div>
       </Card>
-    </div>
+    </PageTransition>
   );
 }

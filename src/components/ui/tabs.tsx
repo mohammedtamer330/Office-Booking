@@ -17,7 +17,7 @@ export function TabsTrigger({ className, ...props }: React.ComponentProps<typeof
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium text-muted transition-colors data-[state=active]:bg-surface data-[state=active]:text-ink data-[state=active]:shadow-sm",
+        "shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium text-muted transition-[colors,box-shadow] duration-200 data-[state=active]:bg-surface data-[state=active]:text-ink data-[state=active]:shadow-sm",
         className,
       )}
       {...props}
@@ -26,5 +26,5 @@ export function TabsTrigger({ className, ...props }: React.ComponentProps<typeof
 }
 
 export function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
-  return <TabsPrimitive.Content className={cn("mt-4", className)} {...props} />;
+  return <TabsPrimitive.Content className={cn("animate-fade-swap mt-4", className)} {...props} />;
 }

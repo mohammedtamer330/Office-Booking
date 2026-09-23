@@ -6,6 +6,7 @@ import { useOfficeUi } from "@/components/office/office-ui-provider";
 import { Button } from "@/components/ui/button";
 import { useNow } from "@/lib/use-now";
 import { formatDayLong, type DaySchedule } from "@/lib/schedule-types";
+import { AnimatedNumber, FadeIn, StaggerContainer, StaggerItem } from "@/components/motion/primitives";
 
 export function TodaySection({ schedule, nowMs }: { schedule: DaySchedule; nowMs: number }) {
   const { openBooking, canBook } = useOfficeUi();
@@ -40,7 +41,7 @@ export function TodaySection({ schedule, nowMs }: { schedule: DaySchedule; nowMs
 
       <div className="mt-4 space-y-2.5">
         {ordered.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-line-strong bg-surface px-5 py-8 text-center">
+          <FadeIn className="rounded-xl border border-dashed border-line-strong bg-surface px-5 py-8 text-center">
             <span className="mx-auto flex size-10 items-center justify-center rounded-full bg-success/10 text-success">
               <CalendarCheck2 className="size-5" />
             </span>
@@ -51,9 +52,15 @@ export function TodaySection({ schedule, nowMs }: { schedule: DaySchedule; nowMs
                 Book your room
               </Button>
             )}
-          </div>
+          </FadeIn>
         ) : (
-          ordered.map((b) => <BookingCard key={b.id} booking={b} nowMs={now} />)
+          <StaggerContainer className="space-y-2.5" stagger={0.05}>
+            {ordered.map((b) => (
+              <StaggerItem key={b.id}>
+                <BookingCard booking={b} nowMs={now} />
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
         )}
       </div>
     </section>
@@ -64,7 +71,9 @@ function Stat({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex items-baseline gap-1.5">
       <dt className="sr-only">{label}</dt>
-      <dd className="text-lg font-semibold text-ink tabular">{value}</dd>
+      <dd className="text-lg font-semibold text-ink tabular overflow-hidden">
+        <AnimatedNumber value={value} />
+      </dd>
       <span className="text-muted" aria-hidden>
         {label}
       </span>

@@ -10,6 +10,7 @@ import { db } from "@/db";
 import { bookings } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { isAdmin, ADMIN_REQUIRED_MESSAGE } from "@/lib/auth/require-admin";
+import { getCurrentMember, SIGN_IN_REQUIRED_MESSAGE } from "@/lib/auth/current-member";
 import type { ActionResult } from "@/lib/action-result";
 
 export async function createBookingAction(
@@ -20,8 +21,18 @@ export async function createBookingAction(
     return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
 
+  // Whoever is booking is the signed-in AIESEC member — never the client-
+  // supplied personId. A signed-in session always overrides it; a request
+  // with no session (or a deactivated/unknown Google account) is rejected
+  // outright, regardless of what personId the client sent.
+  const member = await getCurrentMember();
+  if (!member) {
+    return { success: false, error: SIGN_IN_REQUIRED_MESSAGE, code: "UNAUTHENTICATED" };
+  }
+  const input = { ...parsed.data, personId: member.personId };
+
   try {
-    const booking = await createBooking(parsed.data);
+    const booking = await createBooking(input);
     revalidatePath("/");
     revalidatePath("/my-bookings");
     return { success: true, data: { bookingId: booking.id, bookingCode: booking.bookingCode } };

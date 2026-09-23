@@ -4,9 +4,15 @@ import { ChevronDown } from "lucide-react";
 import { db } from "@/db";
 import { rooms } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getCurrentMember } from "@/lib/auth/current-member";
+import { memberSignOut } from "@/lib/auth/member";
+import { Button } from "@/components/ui/button";
 
 export async function SiteHeader() {
-  const activeRooms = await db.select().from(rooms).where(eq(rooms.active, true));
+  const [activeRooms, member] = await Promise.all([
+    db.select().from(rooms).where(eq(rooms.active, true)),
+    getCurrentMember(),
+  ]);
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur-sm">
@@ -58,6 +64,36 @@ export async function SiteHeader() {
           <Link href="/check-in" className="rounded-md px-2.5 py-2 sm:py-1.5 text-ink-soft transition-colors hover:bg-black/[0.04] hover:text-ink">
             Check in
           </Link>
+
+          {member ? (
+            <details className="group relative ml-1">
+              <summary className="flex list-none items-center gap-1 rounded-md px-2.5 py-2 text-ink-soft transition-colors sm:py-1.5 marker:content-[''] hover:bg-black/[0.04] hover:text-ink [&::-webkit-details-marker]:hidden">
+                {member.name}
+                <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="absolute right-0 z-30 mt-1 w-44 rounded-lg border border-line bg-surface p-1.5 shadow-[var(--shadow-card)]">
+                <p className="truncate px-3 py-1.5 text-xs text-muted tabular">{member.email}</p>
+                <div className="my-1 h-px bg-line" />
+                <form
+                  action={async () => {
+                    "use server";
+                    await memberSignOut({ redirectTo: "/" });
+                  }}
+                >
+                  <Button type="submit" variant="ghost" size="sm" className="w-full justify-start">
+                    Sign out
+                  </Button>
+                </form>
+              </div>
+            </details>
+          ) : (
+            <Link
+              href="/login"
+              className="ml-1 rounded-md px-2.5 py-2 text-ink-soft transition-colors sm:py-1.5 hover:bg-black/[0.04] hover:text-ink"
+            >
+              Sign in
+            </Link>
+          )}
         </nav>
       </div>
     </header>

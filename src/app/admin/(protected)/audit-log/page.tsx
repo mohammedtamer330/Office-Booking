@@ -5,12 +5,13 @@ import { auditLogs } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PageTransition, StaggerRow } from "@/components/motion/primitives";
 
 export default async function AuditLogPage() {
   const logs = await db.select().from(auditLogs).orderBy(desc(auditLogs.createdAt)).limit(200);
 
   return (
-    <div>
+    <PageTransition>
       <h1 className="text-2xl font-semibold text-ink">Audit log</h1>
       <p className="mt-1 text-sm text-muted">Most recent 200 events. Protected from normal editing.</p>
 
@@ -26,8 +27,13 @@ export default async function AuditLogPage() {
             </tr>
           </thead>
           <tbody>
-            {logs.map((log) => (
-              <tr key={log.id} className="border-b border-line last:border-0 align-top">
+            {logs.map((log, i) => (
+              <StaggerRow
+                key={log.id}
+                as="tr"
+                index={i}
+                className="border-b border-line align-top transition-colors duration-150 last:border-0 hover:bg-black/[0.02]"
+              >
                 <td className="whitespace-nowrap px-4 py-2.5 text-xs text-muted tabular">
                   {new Date(log.createdAt).toLocaleString()}
                 </td>
@@ -46,7 +52,7 @@ export default async function AuditLogPage() {
                     "—"
                   )}
                 </td>
-              </tr>
+              </StaggerRow>
             ))}
             {logs.length === 0 && (
               <tr>
@@ -58,6 +64,6 @@ export default async function AuditLogPage() {
           </tbody>
         </table>
       </Card>
-    </div>
+    </PageTransition>
   );
 }

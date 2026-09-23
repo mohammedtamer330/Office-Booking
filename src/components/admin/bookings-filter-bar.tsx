@@ -34,7 +34,7 @@ export function BookingsFilterBar({
         }}
       />
       <select
-        className="h-10 rounded-lg border border-line-strong bg-surface px-3 text-sm"
+        className="h-10 rounded-lg border border-line-strong bg-surface px-3 text-sm transition-colors duration-150 focus:border-ink"
         defaultValue={current.room ?? ""}
         onChange={(e) => updateParam("room", e.target.value)}
       >
@@ -46,7 +46,7 @@ export function BookingsFilterBar({
         ))}
       </select>
       <select
-        className="h-10 rounded-lg border border-line-strong bg-surface px-3 text-sm"
+        className="h-10 rounded-lg border border-line-strong bg-surface px-3 text-sm transition-colors duration-150 focus:border-ink"
         defaultValue={current.status ?? ""}
         onChange={(e) => updateParam("status", e.target.value)}
       >
@@ -59,7 +59,7 @@ export function BookingsFilterBar({
       </select>
       <input
         type="date"
-        className="h-10 rounded-lg border border-line-strong bg-surface px-3 text-sm"
+        className="h-10 rounded-lg border border-line-strong bg-surface px-3 text-sm transition-colors duration-150 focus:border-ink"
         defaultValue={current.date}
         onChange={(e) => updateParam("date", e.target.value)}
       />

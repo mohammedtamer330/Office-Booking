@@ -10,6 +10,7 @@ import { todayInAppTz, nowInAppTz } from "@/lib/time";
 import { ScheduleExplorer } from "@/components/office/schedule-explorer";
 import { BookRoomButton } from "@/components/office/booking-buttons";
 import { ErrorState } from "@/components/ui/error-state";
+import { PageTransition } from "@/components/motion/primitives";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -44,11 +45,11 @@ export default async function AvailabilityPage({
   const [settings, room, schedule, monthDays] = data;
 
   return (
-    <div className="mx-auto max-w-5xl px-5 py-8 sm:py-10">
+    <PageTransition className="mx-auto max-w-5xl px-5 py-8 sm:py-10">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           {room && (
-            <Link href="/availability" className="text-xs text-muted hover:text-ink">
+            <Link href="/availability" className="text-xs text-muted transition-colors hover:text-ink">
               ← All rooms
             </Link>
           )}
@@ -69,6 +70,6 @@ export default async function AvailabilityPage({
         roomSlug={room?.slug}
         showBookButton
       />
-    </div>
+    </PageTransition>
   );
 }

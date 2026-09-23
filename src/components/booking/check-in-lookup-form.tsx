@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { lookupBookingByCodeAction } from "@/app/actions/lookup-actions";
+import { FadeIn } from "@/components/motion/primitives";
 
 export function CheckInLookupForm() {
   const router = useRouter();
@@ -39,7 +40,11 @@ export function CheckInLookupForm() {
          
         />
       </div>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && (
+        <FadeIn>
+          <p className="text-sm text-danger">{error}</p>
+        </FadeIn>
+      )}
       <Button type="submit" className="w-full" disabled={isPending || !code.trim()}>
         {isPending ? "Looking up…" : "Continue"}
       </Button>

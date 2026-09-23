@@ -33,15 +33,22 @@ export default async function ConfirmationPage({
   return (
     <div className="mx-auto max-w-md px-5 py-10">
       <div className="text-center">
-        <Badge variant="success" className="mb-3">
+        <Badge variant="success" className="success-badge mb-3">
           Booking Confirmed
         </Badge>
-        <h1 className="text-2xl font-semibold text-ink tabular">{booking.bookingCode}</h1>
+        <h1
+          className="animate-rise text-2xl font-semibold text-ink tabular"
+          style={{ animationDelay: "80ms" }}
+        >
+          {booking.bookingCode}
+        </h1>
       </div>
 
-      <Card className="mt-6 p-6">
+      <Card className="animate-rise mt-6 p-6" style={{ animationDelay: "140ms" }}>
         <div className="flex justify-center">
-          <Image src={dataUrl} alt="Booking QR code" width={220} height={220} unoptimized />
+          <div className="animate-qr-reveal rounded-lg" style={{ animationDelay: "260ms" }}>
+            <Image src={dataUrl} alt="Booking QR code" width={220} height={220} unoptimized />
+          </div>
         </div>
         <p className="mt-3 text-center text-xs text-muted">
           Show this to your team. Everyone who comes checks in with their own name.
@@ -74,7 +81,7 @@ export default async function ConfirmationPage({
         </dl>
       </Card>
 
-      <div className="mt-6 flex gap-3">
+      <div className="animate-rise mt-6 flex gap-3" style={{ animationDelay: "200ms" }}>
         <Button asChild variant="secondary" className="flex-1">
           <Link href="/my-bookings">My bookings</Link>
         </Button>

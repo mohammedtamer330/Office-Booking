@@ -37,7 +37,7 @@ export function BookingCard({
   return (
     <div
       className={cn(
-        "group relative flex items-stretch overflow-hidden rounded-xl border border-line bg-surface transition-[box-shadow,transform] hover:shadow-[var(--shadow-card)]",
+        "group relative flex items-stretch overflow-hidden rounded-xl border border-line bg-surface transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]",
         finished && "opacity-70",
         className,
       )}

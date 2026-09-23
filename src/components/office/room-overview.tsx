@@ -6,6 +6,7 @@ import { roomLiveState } from "@/lib/timeline";
 import { formatTime12, type DaySchedule } from "@/lib/schedule-types";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
+import { StaggerContainer, StaggerItem } from "@/components/motion/primitives";
 
 /** Every room, live: available or in use right now, and what's next. Links to that room's schedule. */
 export function RoomOverview({
@@ -28,18 +29,18 @@ export function RoomOverview({
       <h2 id="rooms-heading" className="text-[15px] font-semibold text-ink">
         Rooms right now
       </h2>
-      <ul className="mt-3 divide-y divide-line">
+      <StaggerContainer as="ul" className="mt-3 divide-y divide-line" stagger={0.05}>
         {schedule.rooms.map((room) => {
           const mine = schedule.bookings.filter((b) => b.roomId === room.id);
           const { current, next } = roomLiveState(mine, now);
           const Icon = room.requiresPassword ? Lock : DoorOpen;
           return (
-            <li key={room.id}>
+            <StaggerItem key={room.id} as="li">
               <Link
                 href={`/availability?room=${room.slug}`}
-                className="group -mx-2 flex items-center gap-3 rounded-lg px-2 py-3 transition-colors hover:bg-black/[0.03] active:bg-black/[0.05]"
+                className="group -mx-2 flex items-center gap-3 rounded-lg px-2 py-3 transition-colors duration-200 hover:bg-black/[0.03] active:scale-[0.99] active:bg-black/[0.05]"
               >
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-black/[0.05] text-ink-soft">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-black/[0.05] text-ink-soft transition-transform duration-200 group-hover:scale-110">
                   <Icon className="size-4" />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -70,10 +71,10 @@ export function RoomOverview({
                   {current ? "Booked" : "Available"}
                 </span>
               </Link>
-            </li>
+            </StaggerItem>
           );
         })}
-      </ul>
+      </StaggerContainer>
     </section>
   );
 }

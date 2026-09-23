@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { FadeIn } from "@/components/motion/primitives";
 import type { BookedSlot } from "@/lib/types";
 import { formatTime12 } from "@/lib/schedule-types";
 
@@ -83,9 +84,9 @@ export function TimeSlotPicker({
                   onChangeEnd(""); // force re-pick of end time against the new ceiling
                 }}
                 className={cn(
-                  "min-h-10 rounded-md border px-1.5 py-1.5 text-[13px] tabular transition-colors active:scale-[0.98]",
-                  selected && "border-ink bg-ink text-white",
-                  !selected && !disabled && "border-line-strong text-ink hover:bg-black/[0.04]",
+                  "min-h-10 rounded-md border px-1.5 py-1.5 text-[13px] tabular transition-[colors,transform] duration-150 active:scale-[0.98]",
+                  selected && "animate-day-pop border-ink bg-ink text-white",
+                  !selected && !disabled && "border-line-strong text-ink hover:-translate-y-px hover:bg-black/[0.04]",
                   disabled && "cursor-not-allowed border-line bg-black/[0.03] text-muted/60 line-through",
                 )}
                 title={booked ? "Already booked" : past ? "In the past" : undefined}
@@ -98,7 +99,7 @@ export function TimeSlotPicker({
       </div>
 
       {startMinutes !== null && (
-        <div className="mt-4">
+        <FadeIn className="mt-4">
           <p className="mb-2 text-xs font-medium text-muted">
             End time
             {endCeiling !== null && endCeiling < DAY_END_MIN && (
@@ -120,9 +121,9 @@ export function TimeSlotPicker({
                     disabled={disabled}
                     onClick={() => onChangeEnd(toTimeString(m))}
                     className={cn(
-                      "min-h-10 rounded-md border px-1.5 py-1.5 text-[13px] tabular transition-colors active:scale-[0.98]",
-                      selected && "border-brand bg-brand text-white",
-                      !selected && !disabled && "border-line-strong text-ink hover:bg-black/[0.04]",
+                      "min-h-10 rounded-md border px-1.5 py-1.5 text-[13px] tabular transition-[colors,transform] duration-150 active:scale-[0.98]",
+                      selected && "animate-day-pop border-brand bg-brand text-white",
+                      !selected && !disabled && "border-line-strong text-ink hover:-translate-y-px hover:bg-black/[0.04]",
                       disabled && "cursor-not-allowed border-line bg-black/[0.03] text-muted/60 line-through",
                     )}
                     title={tooSoon ? `Minimum booking is ${minDurationMinutes} min` : tooLate ? "Past the allowed limit" : undefined}
@@ -132,7 +133,7 @@ export function TimeSlotPicker({
                 );
               })}
           </div>
-        </div>
+        </FadeIn>
       )}
     </div>
   );

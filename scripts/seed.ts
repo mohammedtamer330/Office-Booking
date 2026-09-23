@@ -98,18 +98,30 @@ async function main() {
   for (const p of PEOPLE) {
     const roleId = roleIdByKey.get(p.role)!;
     const functionId = functionIdByKey.get(p.function)!;
-    const existing = await db.query.people.findFirst({
-      where: (t, { sql }) => sql`lower(${t.name}) = lower(${p.name})`,
-    });
+    const email = p.email.trim().toLowerCase();
+
+    // Match by email first (the durable identity key going forward). Fall
+    // back to a name match so the FIRST run after adding the email column
+    // backfills the existing row instead of creating a duplicate person —
+    // existing bookings/attendance keep pointing at the same person.id.
+    const existing =
+      (await db.query.people.findFirst({
+        where: (t, { sql }) => sql`lower(${t.email}) = ${email}`,
+      })) ??
+      (await db.query.people.findFirst({
+        where: (t, { sql }) => sql`lower(${t.name}) = lower(${p.name})`,
+      }));
+
     if (existing) {
       await db
         .update(schema.people)
-        .set({ roleId, functionId, position: p.position ?? null, updatedAt: new Date() })
+        .set({ roleId, functionId, position: p.position ?? null, email, updatedAt: new Date() })
         .where(eq(schema.people.id, existing.id));
     } else {
       await db.insert(schema.people).values({
         name: p.name,
         position: p.position ?? null,
+        email,
         roleId,
         functionId,
         active: true,

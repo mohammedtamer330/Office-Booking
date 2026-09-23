@@ -105,6 +105,15 @@ export const roomPermissions = pgTable("room_permissions", {
 export const people = pgTable("people", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
+  // AIESEC Workspace email (@aiesec.net), used as the Google-auth identity
+  // key. Nullable at the DB level so existing/historical rows never break a
+  // migration — but every ACTIVE person going through the seed or admin
+  // "Add Person" flow is expected to have one (enforced in application
+  // code, not a NOT NULL constraint, since retroactively backfilling every
+  // historical row isn't guaranteed). Always store it lowercased/trimmed —
+  // see normalizeEmail() in src/lib/auth/member-config.ts — so lookups are
+  // a plain equality check, never case-insensitive SQL, at every call site.
+  email: text("email").unique(),
   position: text("position"),
   roleId: uuid("role_id")
     .notNull()

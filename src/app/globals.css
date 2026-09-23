@@ -158,6 +158,25 @@ html {
 .success-ring { stroke-dasharray: 151; stroke-dashoffset: 151; animation: draw 0.5s ease-out 0.05s forwards; }
 .success-tick { stroke-dasharray: 36; stroke-dashoffset: 36; animation: draw 0.28s ease-out 0.4s forwards; }
 
+/* Booking confirmation: the QR is the payoff, so it gets its own reveal —
+   a touch more pronounced than the generic .animate-rise, timed just after
+   the success badge pops in. */
+@keyframes qr-reveal {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-qr-reveal {
+  animation: qr-reveal 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Radix "popper"-positioned content (Select) sets its own transform inline for
+   anchor placement, so its entrance animation must not touch `transform` —
+   only opacity, or we'd fight the positioning and the popup could render in
+   the wrong place. */
+@keyframes popper-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.popper-fade-in[data-state="open"] { animation: popper-fade-in 0.16s ease-out both; }
+.popper-fade-in[data-state="closed"] { animation: overlay-out 0.12s ease-in both; }
+
 /* Screen-reader-only text */
 .sr-only-text {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;

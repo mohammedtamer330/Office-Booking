@@ -10,6 +10,7 @@ import { getAttendeeCounts } from "@/lib/booking/attendance";
 import { AttendanceCell } from "@/components/admin/attendance-cell";
 import { BookingRowActions } from "@/components/admin/booking-row-actions";
 import { BookingsFilterBar } from "@/components/admin/bookings-filter-bar";
+import { PageTransition, StaggerRow } from "@/components/motion/primitives";
 
 const PAGE_SIZE = 25;
 
@@ -70,7 +71,7 @@ export default async function AdminBookingsPage({
   };
 
   return (
-    <div>
+    <PageTransition>
       <h1 className="text-2xl font-semibold text-ink">Bookings</h1>
       <p className="mt-1 text-sm text-muted">{filtered.length} total</p>
 
@@ -95,8 +96,13 @@ export default async function AdminBookingsPage({
             </tr>
           </thead>
           <tbody>
-            {pageRows.map((b) => (
-              <tr key={b.id} className="border-b border-line last:border-0">
+            {pageRows.map((b, i) => (
+              <StaggerRow
+                key={b.id}
+                as="tr"
+                index={i}
+                className="border-b border-line transition-colors duration-150 last:border-0 hover:bg-black/[0.02]"
+              >
                 <td className="px-4 py-2.5 tabular text-xs text-muted">{b.bookingCode}</td>
                 <td className="px-4 py-2.5">{b.person.name}</td>
                 <td className="px-4 py-2.5">{b.room.name}</td>
@@ -123,7 +129,7 @@ export default async function AdminBookingsPage({
                 <td className="px-4 py-2.5">
                   <BookingRowActions bookingId={b.id} status={b.status} hasCheckedIn={!!b.actualCheckInAt} />
                 </td>
-              </tr>
+              </StaggerRow>
             ))}
             {pageRows.length === 0 && (
               <tr>
@@ -139,7 +145,7 @@ export default async function AdminBookingsPage({
       {totalPages > 1 && (
         <nav className="mt-3 flex items-center justify-center gap-4 text-sm" aria-label="Pagination">
           {page > 1 ? (
-            <Link href={pageHref(page - 1)} className="text-ink-soft hover:text-ink">
+            <Link href={pageHref(page - 1)} className="text-ink-soft transition-colors hover:text-ink">
               ← Previous
             </Link>
           ) : (
@@ -149,7 +155,7 @@ export default async function AdminBookingsPage({
             Page {page} of {totalPages}
           </span>
           {page < totalPages ? (
-            <Link href={pageHref(page + 1)} className="text-ink-soft hover:text-ink">
+            <Link href={pageHref(page + 1)} className="text-ink-soft transition-colors hover:text-ink">
               Next →
             </Link>
           ) : (
@@ -157,6 +163,6 @@ export default async function AdminBookingsPage({
           )}
         </nav>
       )}
-    </div>
+    </PageTransition>
   );
 }

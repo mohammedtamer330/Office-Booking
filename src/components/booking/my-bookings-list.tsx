@@ -13,6 +13,7 @@ import { FunctionChip } from "@/components/office/function-chip";
 import { useOfficeUi } from "@/components/office/office-ui-provider";
 import { cancelBookingAction } from "@/app/actions/booking-actions";
 import { formatDayLong, formatRange } from "@/lib/schedule-types";
+import { StaggerContainer, StaggerItem } from "@/components/motion/primitives";
 import type { MyBooking } from "@/lib/schedule";
 
 const GROUPS: { key: string; label: string; statuses: string[] }[] = [
@@ -88,9 +89,10 @@ export function MyBookingsList({
             {items.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted">No bookings here.</p>
             ) : (
-              <div className="grid gap-3">
+              <StaggerContainer className="grid gap-3" stagger={0.05}>
                 {items.map(({ summary: s, attendees, bookingCode, qrToken }) => (
-                  <Card key={s.id} className="p-4">
+                  <StaggerItem key={s.id}>
+                  <Card className="p-4 transition-shadow duration-200 hover:shadow-[var(--shadow-card)]">
                     <div className="flex items-center justify-between gap-3">
                       <FunctionChip label={s.functionLabel} color={s.functionColor} />
                       <Badge variant={STATUS_VARIANT[s.status]}>{s.status.replace("_", " ")}</Badge>
@@ -142,8 +144,9 @@ export function MyBookingsList({
                       )}
                     </div>
                   </Card>
+                  </StaggerItem>
                 ))}
-              </div>
+              </StaggerContainer>
             )}
           </TabsContent>
         );
