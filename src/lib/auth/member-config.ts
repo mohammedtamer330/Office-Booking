@@ -34,7 +34,8 @@ export const memberAuthConfig: NextAuthConfig = {
   basePath: "/api/auth/member",
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
-  trustHost: true,
+    trustHost: true,
+  debug: true,
   cookies: {
     sessionToken: {
       name: "member-session-token",
