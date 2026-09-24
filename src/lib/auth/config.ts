@@ -2,11 +2,14 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
 
+/**
+ * Admin authentication for v1. There is exactly one admin account, gated by
+ * ADMIN_PASSWORD_HASH (never a plaintext password) in the environment.
+ */
 export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
   pages: { signIn: "/admin/login" },
   trustHost: true,
-  debug: true,
   providers: [
     Credentials({
       name: "Admin Password",
@@ -18,11 +21,11 @@ export const authConfig: NextAuthConfig = {
           console.error("[admin-auth] No password submitted");
           return null;
         }
-               if (!hash) {
+        if (!hash) {
           console.error("[admin-auth] ADMIN_PASSWORD_HASH is not set in this environment");
           return null;
         }
-        console.error("[admin-auth] using hash of length", hash.length, "ending in", JSON.stringify(hash.slice(-6)));
+        console.error("[admin-auth] using hash of length", hash.length, "starting", JSON.stringify(hash.slice(0, 10)), "ending", JSON.stringify(hash.slice(-6)));
 
         const valid = await bcrypt.compare(password, hash);
         if (!valid) {
