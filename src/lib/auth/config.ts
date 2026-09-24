@@ -2,20 +2,11 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
 
-/**
- * Admin authentication for v1. There is exactly one admin account, gated by
- * ADMIN_PASSWORD_HASH (never a plaintext password) in the environment.
- * The architecture (section 33 of the spec) is intentionally left open to
- * grow into per-admin accounts stored in the `people`/a future `admins`
- * table later — this Credentials provider can be swapped for a DB lookup
- * without touching anything else (middleware, session usage) below.
- */
 export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
   pages: { signIn: "/admin/login" },
-  // Vercel sets this automatically in production; explicit here so local
-  // dev/start and non-Vercel hosts don't hit Auth.js's UntrustedHost guard.
   trustHost: true,
+  debug: true,
   providers: [
     Credentials({
       name: "Admin Password",
@@ -23,10 +14,20 @@ export const authConfig: NextAuthConfig = {
       async authorize(credentials) {
         const password = credentials?.password;
         const hash = process.env.ADMIN_PASSWORD_HASH;
-        if (!password || typeof password !== "string" || !hash) return null;
+        if (!password || typeof password !== "string") {
+          console.error("[admin-auth] No password submitted");
+          return null;
+        }
+        if (!hash) {
+          console.error("[admin-auth] ADMIN_PASSWORD_HASH is not set in this environment");
+          return null;
+        }
 
         const valid = await bcrypt.compare(password, hash);
-        if (!valid) return null;
+        if (!valid) {
+          console.error("[admin-auth] Password did not match the stored hash");
+          return null;
+        }
 
         return { id: "admin", name: "Admin", email: undefined };
       },
